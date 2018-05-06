@@ -122,7 +122,7 @@
 ) 
 
 ; company-mode - autocomplete
-(add-to-list 'load-path "~/.emacs.d/company-mode/")
+(add-to-list 'load-path "~/emacs/company-mode/")
 (load "company")
 (add-hook 'after-init-hook 'global-company-mode)
 
@@ -135,11 +135,11 @@
 ;;------------------------
 ;; Theme and modifications
 ;;------------------------
-(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
+(add-to-list 'custom-theme-load-path "~/emacs/themes")
 ;(load-theme 'tango-dark)
 (load-theme 'misterioso)
-;(add-to-list 'custom-theme-load-path "~/.emacs.d/moe-theme.el/")
-;(add-to-list 'load-path "~/.emacs.d/moe-theme.el/")
+;(add-to-list 'custom-theme-load-path "~/emacs/moe-theme.el/")
+;(add-to-list 'load-path "~/emacs/moe-theme.el/")
 ;(require 'moe-theme)
 ;(load-theme 'moe-dark t)
 
