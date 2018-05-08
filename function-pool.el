@@ -45,23 +45,7 @@
 (defvar function-pool-map nil
   "Keymap for function-pool")
 
-(defun function-pool-map-init ()
-  (if function-pool-clear-case
-      (progn
-        (global-set-key "\C-co" 'clear-case-co)
-        (global-set-key "\C-cu" 'clear-case-unco)
-        (global-set-key "\C-ci" 'clear-case-ci)))
-  (if function-pool-tags
-      (progn
-        (global-set-key "\C-xf" 'ido-find-file-in-tag-files)
-        (global-set-key "\M->" 'xref-find-definitions-other-window)
-        (global-set-key "\M-<" 'xref-pop-marker-stack-close-other-window)))
-  (if function-pool-untab
-      (global-set-key "\C-x\C-s" 'save-buffer-without-tabs))
-  (if function-pool-align
-      (global-set-key "\M-A" 'align-regexp-col-first))
-  )
-;; TODO: SHOULD REPLACE global-set-key
+;; TODO: Currently defcustom has no effect, should check how to define keymap with condition of defcustom values
 ;  (setq function-pool-map (make-sparse-keymap))
 ;  (if function-pool-clear-case
 ;      (progn
@@ -72,7 +56,6 @@
 ;      (define-key function-pool-map "\C-xf" 'ido-find-file-in-tag-files))
 ;  (if function-pool-untab
 ;      (define-key function-pool-map "\C-x\C-s" 'save-buffer-without-tabs)))
-
 
 ;;;;;;;;;;;;;;;;;;;;
 ;;  CLEAR CASE    ;;
@@ -219,10 +202,24 @@
 ;;;###autoload
 (define-minor-mode function-pool-minor-mode
   "Global functions pool minor mode"
-  :lighter ""  
-  (if function-pool-minor-mode
-      (add-hook 'function-pool-minor-mode-hook  'function-pool-map-init nil t)
-    (remove-hook 'function-pool-minor-mode-hook 'function-pool-map-init t)))
+  :lighter ""
+  :keymap (let ((map (make-sparse-keymap)))
+			(define-key map (kbd "\C-co") 'clear-case-co)
+			(define-key map (kbd "\C-cu") 'clear-case-unco)
+			(define-key map (kbd "\C-ci") 'clear-case-ci)
+;			(define-key map (kbd "\C-xf") 'ido-find-file-in-tag-files)
+			(define-key map [remap set-fill-column] 'ido-find-file-in-tag-files)
+;			(define-key map (kbd "\M->") 'xref-find-definitions-other-window)
+			(define-key map [remap end-of-buffer] 'xref-find-definitions-other-window)
+;			(define-key map (kbd "\M-<") 'xref-pop-marker-stack-close-other-window)
+			(define-key map [remap beginning-of-buffer] 'xref-pop-marker-stack-close-other-window)
+;			(define-key map (kbd "\C-x\C-s") 'save-buffer-without-tabs)
+			(define-key map [remap save-buffer] 'save-buffer-without-tabs)
+			(define-key map (kbd "\C-x\C-a") 'align-regexp-col-first)
+			map))
+;;;  (if function-pool-minor-mode
+;;;      (add-hook 'function-pool-minor-mode-hook  'function-pool-map-init nil t)
+;;;    (remove-hook 'function-pool-minor-mode-hook 'function-pool-map-init t)))
 
-      
+			  
 (provide 'function-pool)
