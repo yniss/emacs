@@ -63,9 +63,14 @@
                 ("\\.vhd$"  . vhdl-mode))
                 auto-mode-alist))
 (custom-set-variables
- '(verilog-auto-indent-on-newline nil)
- '(verilog-indent-level-declaration 0)
- '(verilog-indent-level-module 0))
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(vc-follow-symlinks t)
+ '(verilog-auto-indent-on-newline nil))
+; '(verilog-indent-level-declaration 0)
+; '(verilog-indent-level-module 0))
 ; '(verilog-tab-always-indent nil))
 
 ; disable auto-indent after semicolon
@@ -92,6 +97,39 @@
 (global-set-key "\M-e" 'eval-buffer)
 (global-set-key "\C-xx" 'copy-to-register)
 (global-set-key "\C-xg" 'insert-register)
+(global-set-key [M-S-up]  'tabbar-backward)
+(global-set-key [M-S-down] 'tabbar-forward)
+
+;------------------------------------
+; TABBED BUFFERS
+;------------------------------------
+
+(load "tabbar.el")
+(require 'tabbar)
+(tabbar-mode)
+
+ (set-face-attribute
+   'tabbar-default-face nil
+   :background "gray60")
+  (set-face-attribute
+   'tabbar-unselected-face nil
+   :background "gray85"
+   :foreground "gray30"
+   :box nil)
+  (set-face-attribute
+   'tabbar-selected-face nil
+   :background "#f2f2f6"
+   :foreground "black"
+   :box nil)
+  (set-face-attribute
+   'tabbar-button-face nil
+   :box '(:line-width 1 :color "gray72" :style released-button))
+  (set-face-attribute
+   'tabbar-separator-face nil
+   :height 0.7)
+
+  (tabbar-mode 1)
+
 
 ;;---------------
 ;;; Load Packages
@@ -99,11 +137,10 @@
 ; function-pool.el - should be loaded before other packages which requires it
 (load "function-pool")
 (add-hook 'verilog-mode-hook 'my-function-pool-hook)
+(add-hook 'python-mode-hook 'my-function-pool-hook)
 (defun my-function-pool-hook ()
   (function-pool-minor-mode 1))
-(custom-set-variables
-; '(function-pool-clear-case nil)
-) 
+ 
 
 ; ficme-mode - TODO/FIXME Highlight
 (load "~/emacs/fic-mode")
@@ -118,14 +155,13 @@
 (add-hook 'verilog-mode-hook (lambda ()
                            "Turn on `verilog-ext-minor-mode' mode."
                            (verilog-ext-minor-mode 1)))
-(custom-set-variables
-; '(verilog-ext-comments nil)
-) 
+ 
 
 ; company-mode - autocomplete
 (add-to-list 'load-path "~/emacs/company-mode/")
 (load "company")
 (add-hook 'after-init-hook 'global-company-mode)
+
 
 ;;-------
 ;; Tags
@@ -144,14 +180,7 @@
 ;(require 'moe-theme)
 ;(load-theme 'moe-dark t)
 
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(verilog-auto-indent-on-newline nil)
- '(verilog-indent-level-declaration 0)
- '(verilog-indent-level-module 0))
+
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -161,3 +190,5 @@
 (set-cursor-color "#ffff00")
 ;(set-face-attribute 'region nil :background "#483d8b")
 (setq column-number-mode t)
+(put 'upcase-region 'disabled nil)
+(put 'downcase-region 'disabled nil)

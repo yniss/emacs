@@ -109,6 +109,7 @@
 (load "~/emacs/fic-mode")
 (add-hook 'verilog-mode-hook 'my-fic-mode-hook)
 (add-hook 'elisp-mode-hook 'my-fic-mode-hook)
+(add-hook 'python-mode-hook 'my-fic-mode-hook)
 (defun my-fic-mode-hook ()
   (fic-mode 1))
 

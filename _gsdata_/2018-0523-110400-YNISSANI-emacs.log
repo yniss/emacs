@@ -1,0 +1,12 @@
+2018-05-23 11:04:02: -- Analysis Started by User Command
+2018-05-23 11:04:08: Changes: 4, Conflicts: 0, CopyTime: 0, FixState: 1, Errors: 0, All: 82
+2018-05-23 11:04:08: Left to Right: Copy File: 4 
+2018-05-23 11:04:08: -- Analysis Complete. Time 00:00:08, Speed: 10 files/s
+2018-05-23 11:04:08: 
+2018-05-23 11:04:23: == Sync Started by User Command
+2018-05-23 11:04:29: Copy Over '//cot/ynissani/emacs/.emacs' -> 'C:/synced_github/emacs/.emacs' (6,378)
+2018-05-23 11:04:30: Copy Over '//cot/ynissani/emacs/function-pool.el' -> 'C:/synced_github/emacs/function-pool.el' (6,941)
+2018-05-23 11:04:32: Copy New '//cot/ynissani/emacs/tabbar.el' -> 'C:/synced_github/emacs/tabbar.el' (48,476)
+2018-05-23 11:04:34: Copy Over '//cot/ynissani/emacs/verilog-ext-minor-mode.el' -> 'C:/synced_github/emacs/verilog-ext-minor-mode.el' (9,063)
+2018-05-23 11:04:40: == Sync Complete. Time: 00:00:18, Speed: 6.68 KB/s, OK: 5, Errors: 0
+2018-05-23 11:04:44: 

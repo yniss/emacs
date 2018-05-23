@@ -186,7 +186,7 @@
       (re-search-backward "^[ \t]*\\.+\\w+[ \t]*\\(.*\\)," (point-min) t);; search for previous port format line ;;TODO: WHAT IF THERE ARE NO PORTS ALREADY?
       (align-regexp-col-first (point) prev_mark "\\.")
       (align-regexp-col-first (point) prev_mark "("))))      
-(global-set-key "\M-i" 'make-instance-ports)    ;;TODO: replace with keymap / add to verilog-keymap
+;(global-set-key "\M-i" 'make-instance-ports)    ;;TODO: replace with keymap / add to verilog-keymap
 
 
 ;;;;;;;;;;;;;;;
@@ -235,7 +235,10 @@
 (define-minor-mode verilog-ext-minor-mode
   "Verilog extensions minor mode"
   :lighter " Verilog-ext"
-
+  :keymap (let ((map (make-sparse-keymap)))
+;			(define-key map (kbd "\M-i") 'make-instance-ports)
+			(define-key map [remap tab-to-tab-stop] 'make-instance-ports)
+			map)
   (if verilog-ext-minor-mode
       (add-hook 'post-self-insert-hook
                 'verilog-ext-check nil t)
