@@ -67,6 +67,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(package-selected-packages (quote (smartparens)))
  '(vc-follow-symlinks t)
  '(verilog-auto-indent-on-newline nil))
 ; '(verilog-indent-level-declaration 0)
@@ -97,6 +98,7 @@
 (global-set-key "\M-e" 'eval-buffer)
 (global-set-key "\C-xx" 'copy-to-register)
 (global-set-key "\C-xg" 'insert-register)
+(global-set-key [C-tab] 'other-window)
 (global-set-key [M-S-up]  'tabbar-backward)
 (global-set-key [M-S-down] 'tabbar-forward)
 
@@ -136,10 +138,9 @@
 ;;---------------
 ; function-pool.el - should be loaded before other packages which requires it
 (load "function-pool")
-(add-hook 'verilog-mode-hook 'my-function-pool-hook)
-(add-hook 'python-mode-hook 'my-function-pool-hook)
-(defun my-function-pool-hook ()
-  (function-pool-minor-mode 1))
+(define-globalized-minor-mode my-global-function-pool-minor-mode function-pool-minor-mode
+  (lambda () (function-pool-minor-mode 1)))
+(my-global-function-pool-minor-mode 1)
  
 
 ; ficme-mode - TODO/FIXME Highlight
@@ -162,6 +163,18 @@
 (load "company")
 (add-hook 'after-init-hook 'global-company-mode)
 
+; neotree
+(add-to-list 'load-path "~/emacs/emacs-neotree/")
+(require 'neotree)
+(global-set-key "\C-c\C-f" 'neotree-toggle)
+
+; smartparens
+(add-to-list 'load-path "~/emacs/dash/")
+(add-to-list 'load-path "~/emacs/smartparens/")
+(require 'smartparens-config)
+(define-globalized-minor-mode my-global-smartparens-mode smartparens-mode
+  (lambda () (smartparens-mode 1)))
+(my-global-smartparens-mode 1)
 
 ;;-------
 ;; Tags

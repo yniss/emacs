@@ -170,22 +170,29 @@
    In addition, function removes common keywords that may have been copied from module ports, such as input, output and bus widths."
   (interactive)
   (save-excursion
-    (if (> (point) (mark))
-        (exchange-point-and-mark))
-    (let ((prev_point (point)) (prev_mark (mark)))
+    (when (> (point) (mark)) (exchange-point-and-mark))
+    (let ((prev-point (point)))
       (while (< (point) (region-end))
-        (if (and (re-search-forward "^\\([ \t]*\\(input\\|output\\)*[ \t]*\\(wire\\|reg\\)*[ \t]*\\(\\[.*\\]\\)*[ \t]*\\(\\.+\\)*\\)\\w+\\((*[ \t]*.*)*,*\\)" (region-end) t)
+        (when (and (re-search-forward "^\\([ \t]*\\(input\\|output\\)*[ \t]*\\(wire\\|reg\\)*[ \t]*\\(\\[.*\\]\\)*[ \t]*\\(\\.+\\)*\\)\\w+\\((*[ \t]*.*)*,*\\)" (region-end) t)
                  (not (inside-comment)))
-            (progn
-              (if (or (not (match-string 5)) (not (match-string 6))) ;; check that line is not exactly in port format (otherwise leave it)
-                  (progn
+              (when (or (not (match-string 5)) (not (match-string 6))) ;; check that line is not exactly in port format (otherwise leave it)
                     (replace-match "." nil nil nil 1)
-                    (replace-match " ()," nil nil nil 6)))))
-        (forward-line 1))
-      (goto-char prev_point)
-      (re-search-backward "^[ \t]*\\.+\\w+[ \t]*\\(.*\\)," (point-min) t);; search for previous port format line ;;TODO: WHAT IF THERE ARE NO PORTS ALREADY?
-      (align-regexp-col-first (point) prev_mark "\\.")
-      (align-regexp-col-first (point) prev_mark "("))))      
+                    (replace-match " ()," nil nil nil 6)))
+			  (forward-line 1))
+	  (setq point-instance-start (re-search-backward "^[ \t]*\\w+" (point-min) t)) ;; find module instance name as alignment search border
+	  (goto-char prev-point)
+      (if (re-search-backward "^[ \t]*\\.+\\w+[ \t]*\\(.*\\)," point-instance-start t) ;; search for previous port format line, but not before instance beginning
+		  (progn
+			(align-regexp-first-line (point) (region-end) "\\.")
+			(align-regexp-first-line (point) (region-end) "()"))
+		(progn
+		  (electric-verilog-tab)
+		  (align-regexp-simple prev-point (region-end) "(")))
+	  (setq point-instance-end (re-search-forward ");" (point-max) t)) ;; search module instance end ");" and set border for following search 
+	  (when point-instance-end ;; search and replace last ")," by ")" if there was such inside region 
+		(when (and (re-search-backward "\\(),\\)" point-instance-start t) (< (point) (region-end)) (> (point) prev-point))
+		  (replace-match ")" nil nil nil 1)))
+	  )))
 ;(global-set-key "\M-i" 'make-instance-ports)    ;;TODO: replace with keymap / add to verilog-keymap
 
 
@@ -197,28 +204,32 @@
 (defun incr-comment-count ()
   (setf *comment-count* (+ 1 *comment-count*)))
   
-(defun zero-comment-count ()
-  (setf *comment-count* (- *comment-count* *comment-count*)))
+(defun init-comment-count (&optional init-val)
+  (or init-val (setq init-val 0))
+  (setf *comment-count* (+ init-val (- *comment-count* *comment-count*))))
 
 (defun verilog-ext-comment-check () 
   "Check if 3 or 4 comment symbols entered"
-  (cond ((= *comment-count* 3) (comment-line 4))
-        ((= *comment-count* 4) (comment-header))))
+  (cond ((= *comment-count* 3) (if (re-search-backward "/\\{3\\}" (- (point) 3) t) (comment-line 4) (init-comment-count 1)))
+		((= *comment-count* 4) (if (re-search-backward "/\\{35\\}" (- (point) 35) t) (comment-header) (init-comment-count 1)))))
 
 (defun comment-line (start-idx)
   "Enter a comment line"
   (setq repeat (- 35 start-idx))
   (dotimes (i repeat)
-        (insert "/")))
+	(insert "/"))
+  (end-of-line))
 
 (defun comment-header ()
   "Enter a comment header"
+  (end-of-line)
   (newline)
   (insert "// ")
   (newline)
   (comment-line 0)
   (forward-line -1)
-  (forward-char 3))
+  (forward-char 3)
+  (init-comment-count))
  
   
 ;;;;;;;;;;;;;;;
@@ -227,9 +238,9 @@
 (defun verilog-ext-check ()
   "Check if we should add verilog structure or comment"
   ; last character is space or /
-  (cond ((and verilog-ext-auto-templates (= last-command-event ?\s)) (progn (verilog-ext-template-check) (zero-comment-count)))
+  (cond ((and verilog-ext-auto-templates (= last-command-event ?\s)) (progn (verilog-ext-template-check) (init-comment-count)))
         ((and verilog-ext-comments (= last-command-event ?/)) (progn (incr-comment-count) (verilog-ext-comment-check )))
-        (t (zero-comment-count))))
+		(t (init-comment-count))))
         
 
 (define-minor-mode verilog-ext-minor-mode

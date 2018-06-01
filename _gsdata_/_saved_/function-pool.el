@@ -145,29 +145,28 @@
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;   INDENT/ALIGN   ;;
 ;;;;;;;;;;;;;;;;;;;;;;
-(defun align-regexp-col-first (start end regexp)
-  "Align to the column of the first line with specified regular expression."
+(defun align-regexp-first-line (start end regexp)
+  "Align specified regexp to the column of the first line in which it is matched."
   (interactive "r\nsAlign first regexp:")
   (save-excursion 
-    (unwind-protect
-        (goto-char start)
-      (if (search-forward-regexp regexp end t) 
-          ;; found regexp
-          (progn
-            (end-of-line)
-            (search-backward-regexp regexp start t)
-            (setq col (current-column))
-;            (message "Column is: %d" col) ;; FOR DEBUG
-            (align-regexp-to-col start end regexp col))
-        ;; didn't find
-        (message "Can't find regexp: %s" regexp)))))
-;(global-set-key "\M-A" 'align-regexp-col-first)
+	(goto-char start)
+	(when (search-forward-regexp regexp end t) 
+	  (search-backward-regexp regexp start t)
+	  (setq col (current-column))
+	  (forward-char)
+	  (align-regexp-to-col start end regexp col))))
 
 
 (defun align-regexp-to-col (start end regexp col)
   "Align regular expression to a specified column."
   (align-regexp start end 
                 (concat "\\(\\s-*\\)" regexp) 1 (- col) nil))
+
+
+(defun align-regexp-simple (start end regexp &optional repeat)
+  "A simplified align-regexp."
+  (align-regexp start end 
+                (concat "\\(\\s-*\\)" regexp) 1 align-default-spacing repeat))
 
 
 ;;;;;;;;;;;;;;;;;;;;
@@ -209,13 +208,13 @@
 			(define-key map (kbd "\C-ci") 'clear-case-ci)
 ;			(define-key map (kbd "\C-xf") 'ido-find-file-in-tag-files)
 			(define-key map [remap set-fill-column] 'ido-find-file-in-tag-files)
-;			(define-key map (kbd "\M->") 'xref-find-definitions-other-window)
-			(define-key map [remap end-of-buffer] 'xref-find-definitions-other-window)
-;			(define-key map (kbd "\M-<") 'xref-pop-marker-stack-close-other-window)
-			(define-key map [remap beginning-of-buffer] 'xref-pop-marker-stack-close-other-window)
+			(define-key map (kbd "\C-c.") 'xref-find-definitions-other-window)
+;			(define-key map [remap end-of-buffer] 'xref-find-definitions-other-window)
+			(define-key map (kbd "\C-c,") 'xref-pop-marker-stack-close-other-window)
+;			(define-key map [remap beginning-of-buffer] 'xref-pop-marker-stack-close-other-window)
 ;			(define-key map (kbd "\C-x\C-s") 'save-buffer-without-tabs)
 			(define-key map [remap save-buffer] 'save-buffer-without-tabs)
-			(define-key map (kbd "\C-x\C-a") 'align-regexp-col-first)
+			(define-key map (kbd "\C-x\C-a") 'align-regexp-first-line)
 			map))
 ;;;  (if function-pool-minor-mode
 ;;;      (add-hook 'function-pool-minor-mode-hook  'function-pool-map-init nil t)

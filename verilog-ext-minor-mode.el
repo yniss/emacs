@@ -6,6 +6,7 @@
 ;;
 ;;   - Templates Auto-insert
 ;;   - Transform module ports into instance ports
+;;   - Copy and Auto instantiate modules
 ;;   - Auto Comment line (by 3x'/') or header (by 4x'/')  
 
 (require 'verilog-mode)
@@ -50,16 +51,9 @@
       (if (and optional (eq char ?\r))
       (progn (insert " ")
          (unexpand-abbrev)
-         (throw 'abort "ERROR:  Template aborted")) ;TODO: this doesn't exit correctly from error
+         (throw 'abort "Error:  template aborted")) ;TODO: this doesn't exit correctly from error, there is no catch 'abort
       char))))
 
-(defun verilog-ext-template-arg (prompt)
-  "Accept template argument from the user. After user enters 'return' char argument is accepted."
-  (let ((start (point)) string)
-    (setq string (read-from-minibuffer (concat prompt ": ")))
-    (if (not (equal string ""))
-        (insert string))
-    string))
 
 (defun remove-template-word ()
   "Remove original template word"
@@ -69,29 +63,33 @@
  
 (defun electric-always ()
   "Insert verilog 'always' template"
+  (let (always-pos end-pos)
   (save-excursion
     (setq always-type (verilog-ext-template-query "(c)omb or (s)eq?" t))
     (remove-template-word)
     ; always template
     (verilog-sk-always)
+    ; indent
+    (re-search-backward "always" nil t)
+    (set-mark (point))
+    (re-search-forward "end" nil t)
+    (electric-verilog-tab)
+    (deactivate-mark)
     ; remove "/*AUTOSENSE*/"
-    (forward-line -1)
-    (re-search-forward "AUTOSENSE" nil t)
+    (re-search-backward " /\\*AUTOSENSE\\*/ " nil t)
     (replace-match "")
-    (delete-backward-char 3)
-    (delete-char 3)
     ; check if seq or comb
     (cond ((eq always-type ?s) (setq pos (always-seq)))
           ((eq always-type ?c) (setq pos (always-comb)))
-          (t "default")))
+          (t "default"))))
   (goto-char pos))
 
 (defun always-seq ()
   "Sequential always"
   (insert "posedge ")
-  (setq clk   (verilog-ext-template-arg "clock name"))
+  (setq clk   (prompt-user-arg "clock name" t))
   (insert " or negedge ")
-  (setq reset (verilog-ext-template-arg "reset name"))
+  (setq reset (prompt-user-arg "reset name" t))
   (forward-line 1)
   (insert (concat "\tif (~" reset ")" "\n\n\telse\n"))
   (forward-line -2)
@@ -163,7 +161,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;  Instance Ports  ;;
 ;;;;;;;;;;;;;;;;;;;;;;
-(defun make-instance-ports ()
+(defun verilog-ext-indent-instance-ports ()
   "Transforms selected region to format of verilog instantiation ports, e.g. '.<port_name> (),'.
    Function also indent region according to the port prior to the region, if there is such.
    If port line doesn't contains only '.' or '(),' then function fills only the missing part.
@@ -173,28 +171,138 @@
     (when (> (point) (mark)) (exchange-point-and-mark))
     (let ((prev-point (point)))
       (while (< (point) (region-end))
-        (when (and (re-search-forward "^\\([ \t]*\\(input\\|output\\)*[ \t]*\\(wire\\|reg\\)*[ \t]*\\(\\[.*\\]\\)*[ \t]*\\(\\.+\\)*\\)\\w+\\((*[ \t]*.*)*,*\\)" (region-end) t)
+        (when (and (re-search-forward "^\\([ \t]*\\(input\\|output\\)*[ \t]*\\(wire\\|reg\\)*[ \t]*\\(\\[.*\\]\\)*[ \t]*\\(\\.+\\)*\\)\\w+\\((*[ \t]*.*)*,*\\)" (region-end) t) ;;TODO: is it possible for any other words? for example signed
                  (not (inside-comment)))
               (when (or (not (match-string 5)) (not (match-string 6))) ;; check that line is not exactly in port format (otherwise leave it)
                     (replace-match "." nil nil nil 1)
                     (replace-match " ()," nil nil nil 6)))
-			  (forward-line 1))
-	  (setq point-instance-start (re-search-backward "^[ \t]*\\w+" (point-min) t)) ;; find module instance name as alignment search border
-	  (goto-char prev-point)
+              (forward-line 1))
+      (setq point-instance-start (re-search-backward "^[ \t]*\\w+" (point-min) t)) ;; find module instance name as alignment search border
+      (goto-char prev-point)
       (if (re-search-backward "^[ \t]*\\.+\\w+[ \t]*\\(.*\\)," point-instance-start t) ;; search for previous port format line, but not before instance beginning
-		  (progn
-			(align-regexp-first-line (point) (region-end) "\\.")
-			(align-regexp-first-line (point) (region-end) "()"))
-		(progn
-		  (electric-verilog-tab)
-		  (align-regexp-simple prev-point (region-end) "(")))
-	  (setq point-instance-end (re-search-forward ");" (point-max) t)) ;; search module instance end ");" and set border for following search 
-	  (when point-instance-end ;; search and replace last ")," by ")" if there was such inside region 
-		(when (and (re-search-backward "\\(),\\)" point-instance-start t) (< (point) (region-end)) (> (point) prev-point))
-		  (replace-match ")" nil nil nil 1)))
-	  )))
-;(global-set-key "\M-i" 'make-instance-ports)    ;;TODO: replace with keymap / add to verilog-keymap
+          (progn
+            (align-regexp-first-line (point) (region-end) "\\.")
+            (align-regexp-first-line (point) (region-end) "()"))
+        (progn
+          (electric-verilog-tab)
+          (align-regexp-simple prev-point (region-end) "(")))
+      (setq point-instance-end (re-search-forward ");" (point-max) t)) ;; search module instance end ");" and set border for following search 
+      (when point-instance-end ;; search and replace last ")," by ")" if there was such inside region 
+        (when (and (re-search-backward "\\(),\\)" point-instance-start t) (< (point) (region-end)) (> (point) prev-point))
+          (replace-match ")" nil nil nil 1)))
+      )))
+;(global-set-key "\M-i" 'verilog-ext-indent-instance-ports)    ;;TODO: replace with keymap / add to verilog-keymap
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;  Copy Module & Make Instance  ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun verilog-ext-init-module ()
+  "Initialize a general purpose module struct with default nil values. 
+   This module will be overriden whenever a module is copied."
+  (defvar gp-module-name nil)
+  (defvar gp-module-parameters nil)
+  (defvar gp-module-ports nil))
+
+
+(defun verilog-ext-copy-module ()
+  "Copy module name, ports and optionally paramteres to the general purpose module ('gp-module').
+   The copied module can be used to create a module instance using make-instance."
+  (interactive)
+  (let (error-not-in-module module-name (module-parameters nil) (module-ports nil) prev-point module-end (loop-break nil))
+  (save-excursion
+    ; check that function is called from within a module declaration, otherwise abort function and return error
+    (setq
+     error-not-in-module
+     (catch 'module-error
+       (end-of-line)
+       (when (or (not (re-search-backward "^[ *\\t*]*\\(module\\|);\\)" nil t))
+                 (equal ");" (match-string 1)))
+         (throw 'module-error "Error: Called verilog-ext-copy-module not from within a module declaration"))       
+       ; extract module name
+       (re-search-forward "module *\\(\\w+\\) *" nil t) ;;TODO: does not support TABs instead of spaces
+       (setq module-name (match-string-no-properties 1))
+       ; save current location for later
+       (setq prev-point (point))
+       (when (not (re-search-forward ");" nil t))
+         (throw 'module-error "Error: module has no ');' ending symbol"))
+       (setq module-end (point))
+       (goto-char prev-point) 
+       ; check if module have parameters, either in '#(parameter <names>)' format or inside declarations, preceding ports 
+       (re-search-forward "\\(\\(# *( *parameter\\)\\|\\((.*\\(\n\\)+.*\\(\n\\)*.*parameter\\)\\)*" nil t)
+       ; module consists parameters
+       (when (match-string-no-properties 1)
+         (while (not loop-break)
+           (or 
+            (and (re-search-forward "\\(\\w+\\) *=" module-end t)
+                 (not (inside-comment))
+                 (setq module-parameters (append module-parameters (list (match-string-no-properties 1)))))
+            (and (re-search-forward "\\()\\)" module-end t)
+                 (setq loop-break (match-string-no-properties 1)))
+            (setq loop-break t))))
+       (goto-char prev-point) 
+       (while (< (point) module-end)
+         (when (and (re-search-forward "^ *\\(\\(input\\|output\\|inout\\) +.*$\\)" module-end t)
+                  (not (inside-comment)))
+           (setq module-ports (append module-ports (list (match-string-no-properties 1)))))
+         (forward-line))
+       (message "Copying module %s...done" module-name)
+       nil))
+    (if error-not-in-module (error error-not-in-module))
+    (setf gp-module-name module-name
+          gp-module-ports module-ports
+          gp-module-parameters module-parameters))))
+
+
+(defun verilog-ext-make-instance ()
+  "Create an instance from 'gp-module' which was created by calling verilog-ext-copy-module."
+  (interactive)
+  (let (error-no-module prev-point)
+    (setq
+     error-no-module
+     (catch 'no-module
+       (unless gp-module-name
+         (throw 'no-module  "Error: no module was copied"))
+       (electric-verilog-tab)
+       (insert gp-module-name " ")
+       ; if there are parameters - insert them and indent
+       (when gp-module-parameters
+         (insert "#(")
+         (newline)
+         (setq prev-point (point))       
+         (dolist (param gp-module-parameters)          
+           (insert "." param " (), ")
+           (newline))
+         (set-mark (point))
+         (goto-char prev-point)
+         (verilog-ext-indent-instance-ports)
+         (goto-char (region-end))
+         (re-search-backward ")" nil t)
+         (replace-match "))")
+         (newline))
+       ; insert instance name and indent
+       (insert gp-module-name "_i (")
+       (beginning-of-line)
+       (electric-verilog-tab)
+       (end-of-line)
+       (newline)
+       ; insert ports and indent
+       (setq prev-point (point))
+       (dolist (port gp-module-ports)
+         (insert port)
+         (newline))
+       (set-mark (point))
+       (insert ");")
+       (goto-char prev-point)
+       (verilog-ext-indent-instance-ports)
+       (deactivate-mark)
+       (re-search-forward ").*\\(\n\\)+.*);" nil t)
+       (replace-match "));")
+       (forward-line)
+       nil))
+    (message "Instantiating %s...done" gp-module-name)
+    (if error-no-module (error error-no-module))
+  ))
 
 ;;;;;;;;;;;;;;;
 ;;  Comment  ;;
@@ -211,13 +319,13 @@
 (defun verilog-ext-comment-check () 
   "Check if 3 or 4 comment symbols entered"
   (cond ((= *comment-count* 3) (if (re-search-backward "/\\{3\\}" (- (point) 3) t) (comment-line 4) (init-comment-count 1)))
-		((= *comment-count* 4) (if (re-search-backward "/\\{35\\}" (- (point) 35) t) (comment-header) (init-comment-count 1)))))
+        ((= *comment-count* 4) (if (re-search-backward "/\\{35\\}" (- (point) 35) t) (comment-header) (init-comment-count 1)))))
 
 (defun comment-line (start-idx)
   "Enter a comment line"
   (setq repeat (- 35 start-idx))
   (dotimes (i repeat)
-	(insert "/"))
+    (insert "/"))
   (end-of-line))
 
 (defun comment-header ()
@@ -240,19 +348,24 @@
   ; last character is space or /
   (cond ((and verilog-ext-auto-templates (= last-command-event ?\s)) (progn (verilog-ext-template-check) (init-comment-count)))
         ((and verilog-ext-comments (= last-command-event ?/)) (progn (incr-comment-count) (verilog-ext-comment-check )))
-		(t (init-comment-count))))
+        (t (init-comment-count))))
         
 
 (define-minor-mode verilog-ext-minor-mode
   "Verilog extensions minor mode"
   :lighter " Verilog-ext"
   :keymap (let ((map (make-sparse-keymap)))
-;			(define-key map (kbd "\M-i") 'make-instance-ports)
-			(define-key map [remap tab-to-tab-stop] 'make-instance-ports)
-			map)
+            (define-key map (kbd "\C-c p") 'verilog-ext-indent-instance-ports)
+;           (define-key map [remap tab-to-tab-stop] 'verilog-ext-indent-instance-ports)
+            (define-key map (kbd "\C-c m") 'verilog-ext-copy-module)
+            (define-key map (kbd "\C-c n") 'verilog-ext-make-instance)
+            map)
   (if verilog-ext-minor-mode
-      (add-hook 'post-self-insert-hook
-                'verilog-ext-check nil t)
+      (progn
+        (add-hook 'post-self-insert-hook
+                  'verilog-ext-check nil t)
+        (add-hook 'verilog-ext-minor-mode-hook
+                  'verilog-ext-init-module))
     (remove-hook 'post-self-insert-hook
                  'verilog-ext-check t)))
 

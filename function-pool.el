@@ -149,12 +149,12 @@
   "Align specified regexp to the column of the first line in which it is matched."
   (interactive "r\nsAlign first regexp:")
   (save-excursion 
-	(goto-char start)
-	(when (search-forward-regexp regexp end t) 
-	  (search-backward-regexp regexp start t)
-	  (setq col (current-column))
-	  (forward-char)
-	  (align-regexp-to-col start end regexp col))))
+    (goto-char start)
+    (when (search-forward-regexp regexp end t) 
+      (search-backward-regexp regexp start t)
+      (setq col (current-column))
+      (forward-char)
+      (align-regexp-to-col start end regexp col))))
 
 
 (defun align-regexp-to-col (start end regexp col)
@@ -198,27 +198,59 @@
   (nth 4 (syntax-ppss)))
 
 
+; copy-above-line
+(autoload 'copy-from-above-command "misc"
+    "Copy characters from previous nonblank line, starting just above point.
+  \(fn &optional arg)"
+    'interactive)
+(defun copy-above-line ()
+  "Uses copy-from-above-command to copy line above from beginning of line."
+  (interactive)
+  (beginning-of-line)
+  (copy-from-above-command)
+  (newline))
+
+; rectangle numbers
+(defun rectangle-incremental-numbers ()
+  "Uses rectangle-number-lines to create rectangle of incremental numbers starting from a user given number."
+  (interactive)
+  (let (inc-start)
+  (setq inc-start (prompt-user-arg "Incremental number rectangle - start (default 0)"))
+  (rectangle-number-lines (region-beginning) (region-end) (string-to-number inc-start))
+  (deactivate-mark)))
+
+(defun prompt-user-arg (prompt &optional print-arg)
+  "Accept argument from the user. After user enters 'return' char argument is accepted."
+  (let ((start (point)) string)
+    (setq string (read-from-minibuffer (concat prompt ": ")))
+    (if (and (not (equal string ""))
+             print-arg)
+        (insert string))
+    string))
+
 ;;;###autoload
 (define-minor-mode function-pool-minor-mode
   "Global functions pool minor mode"
   :lighter ""
   :keymap (let ((map (make-sparse-keymap)))
-			(define-key map (kbd "\C-co") 'clear-case-co)
-			(define-key map (kbd "\C-cu") 'clear-case-unco)
-			(define-key map (kbd "\C-ci") 'clear-case-ci)
-;			(define-key map (kbd "\C-xf") 'ido-find-file-in-tag-files)
-			(define-key map [remap set-fill-column] 'ido-find-file-in-tag-files)
-			(define-key map (kbd "\C-c.") 'xref-find-definitions-other-window)
-;			(define-key map [remap end-of-buffer] 'xref-find-definitions-other-window)
-			(define-key map (kbd "\C-c,") 'xref-pop-marker-stack-close-other-window)
-;			(define-key map [remap beginning-of-buffer] 'xref-pop-marker-stack-close-other-window)
-;			(define-key map (kbd "\C-x\C-s") 'save-buffer-without-tabs)
-			(define-key map [remap save-buffer] 'save-buffer-without-tabs)
-			(define-key map (kbd "\C-x\C-a") 'align-regexp-first-line)
-			map))
+            (define-key map (kbd "\C-co") 'clear-case-co)
+            (define-key map (kbd "\C-cu") 'clear-case-unco)
+            (define-key map (kbd "\C-ci") 'clear-case-ci)
+;           (define-key map (kbd "\C-xf") 'ido-find-file-in-tag-files)
+            (define-key map [remap set-fill-column] 'ido-find-file-in-tag-files)
+            (define-key map (kbd "\C-c.") 'xref-find-definitions-other-window)
+;           (define-key map [remap end-of-buffer] 'xref-find-definitions-other-window)
+            (define-key map (kbd "\C-c,") 'xref-pop-marker-stack-close-other-window)
+;           (define-key map [remap beginning-of-buffer] 'xref-pop-marker-stack-close-other-window)
+;           (define-key map (kbd "\C-x\C-s") 'save-buffer-without-tabs)
+            (define-key map [remap save-buffer] 'save-buffer-without-tabs)
+            (define-key map (kbd "\C-x\C-a") 'align-regexp-first-line)
+            (define-key map [M-up]  'copy-above-line)
+            (define-key map [remap rectangle-number-lines] 'rectangle-incremental-numbers)                      
+            map))
 ;;;  (if function-pool-minor-mode
 ;;;      (add-hook 'function-pool-minor-mode-hook  'function-pool-map-init nil t)
 ;;;    (remove-hook 'function-pool-minor-mode-hook 'function-pool-map-init t)))
 
-			  
+              
 (provide 'function-pool)

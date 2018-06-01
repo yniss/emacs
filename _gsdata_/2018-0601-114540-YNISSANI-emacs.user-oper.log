@@ -1,0 +1,11 @@
+2018-06-01 11:45:41: Comparing //cot/ynissani/emacs/verilog-ext-minor-mode.el to C:/synced_github/emacs/verilog-ext-minor-mode.el
+2018-06-01 11:45:41: Compare: "\\cot\ynissani\emacs\verilog-ext-minor-mode.el" "C:\synced_github\emacs\verilog-ext-minor-mode.el"
+2018-06-01 11:45:41: ===== Done =====
+2018-06-01 11:45:41: 
+2018-06-01 11:47:02: == Sync Started by User Command
+2018-06-01 11:47:09: //cot/ynissani/emacs/.emacs: Source file has changed between Analyze and Sync from '[file] size=7,061 accu-time=2018-05-31 21:11:56 attr=Archive cktype=0' to 'size=6,884 time=2018-06-01 11:43:59', noted in source file state
+2018-06-01 11:47:09: Copy Over '//cot/ynissani/emacs/.emacs' -> 'C:/synced_github/emacs/.emacs' (7,061) (User Action)
+2018-06-01 11:47:10: Copy Over '//cot/ynissani/emacs/function-pool.el' -> 'C:/synced_github/emacs/function-pool.el' (8,347)
+2018-06-01 11:47:13: Copy Over '//cot/ynissani/emacs/verilog-ext-minor-mode.el' -> 'C:/synced_github/emacs/verilog-ext-minor-mode.el' (13,992)
+2018-06-01 11:47:19: == Sync Complete. Time: 00:00:19, Speed: 42.2 KB/s, OK: 68, Errors: 0
+2018-06-01 11:47:23: 
