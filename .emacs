@@ -67,7 +67,34 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages (quote (smartparens)))
+ '(org-agenda-custom-commands
+   (quote
+    (("c" "Unscheduled TODOs for scheduling next month's tasks (excluding LowPriority and FutureFeature tagged)"
+      ((tags-todo "-LowPriority-FutureFeature"
+                  ((org-agenda-skip-function
+                    (quote
+                     (org-agenda-skip-entry-if
+                      (quote timestamp))))
+                   (org-agenda-overriding-header "Unscheduled TODOs for scheduling next month's tasks (excluding LowPriority and FutureFeature tagged)")))
+       (agenda ""
+               ((org-agenda-span 30))))
+      nil)
+     ("f" "FutureFeature tagged TODOs (excluding LowPriority tagged)"
+      ((tags-todo "FutureFeature-LowPriority"
+                  ((org-agenda-overriding-header "FeutureFeature tagged TODOs (excluding LowPriority tagged)"))))
+      nil)
+     ("x" "Unscheduled TODO"
+      ((todo ""
+             ((org-agenda-overriding-header "Unscheduled TODO")
+              (org-agenda-skip-function
+               (quote
+                (org-agenda-skip-entry-if
+                 (quote timestamp))))))
+       (agenda ""
+               ((org-agenda-span 30))))
+      nil))))
+ '(org-agenda-weekend-days (quote (5 6)))
+ '(package-selected-packages (quote (use-package exec-path-from-shell jedi smartparens)))
  '(vc-follow-symlinks t)
  '(verilog-auto-indent-on-newline nil))
 ; '(verilog-indent-level-declaration 0)
@@ -160,8 +187,8 @@
 
 ; company-mode - autocomplete
 (add-to-list 'load-path "~/emacs/company-mode/")
-(load "company")
-(add-hook 'after-init-hook 'global-company-mode)
+;(load "company")
+;(add-hook 'after-init-hook 'global-company-mode)
 
 ; neotree
 (add-to-list 'load-path "~/emacs/emacs-neotree/")
@@ -176,11 +203,15 @@
   (lambda () (smartparens-mode 1)))
 (my-global-smartparens-mode 1)
 
+; yaml-mode
+(require 'yaml-mode)
+    (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
+
 ;;-------
 ;; Tags
 ;;-------
-(setq tags-file-name "~/tags")
-
+;(setq cc-view-name (clear-case-root));;TODO: for tags depending on the curr project, complete/remove
+(setq tags-file-name (concat (getenv "UNMANAGED_DIR") "/../tags_emacs"))
 
 ;;------------------------
 ;; Theme and modifications
@@ -205,3 +236,114 @@
 (setq column-number-mode t)
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
+
+;; linum-mode
+;(global-linum-mode 1)
+
+;;------------------------
+;; Org-mode
+;;------------------------
+(require 'org)
+(define-key global-map "\C-cl" 'org-store-link)
+(define-key global-map "\C-ca" 'org-agenda)
+(setq org-log-done t)
+(if (eq system-type 'windows-nt)
+    (setq org-agenda-files (list "C:/Users/ynissani/OneDrive - Qualcomm/Desktop/Tasks.org"))
+)
+(add-to-list 'org-tag-faces '("Verification" . (:foreground "tomato"  :weight bold)))
+(add-to-list 'org-tag-faces '("FutureFeature" . (:foreground "sienna1"  :weight bold)))
+(add-to-list 'org-tag-faces '("LowPriority" . (:foreground "DeepSkyBlue"  :weight bold)))
+;(add-to-list 'org-tag-faces '("CANCELLED" . (:foreground "azure"  :weight bold)))
+;(add-to-list 'org-tag-faces '("GOT_IT" . (:foreground "SeaGreen1"  :weight bold)))
+(add-to-list 'org-emphasis-alist '("*" (:foreground "LawnGreen"  :weight bold)))
+(setq org-agenda-skip-scheduled-if-done t)
+(setq org-agenda-skip-deadline-if-done t)
+(setq org-agenda-start-on-weekday 0)
+(setq org-todo-keyword-faces
+      '(("TODO" . org-warning) ("STARTED" . "yellow") ("WONT_DO" . "light gray")
+        ("CANCELED" . (:foreground "azure"))))
+(setq org-enforce-todo-dependencies t)
+(setq org-enforce-todo-checkbox-dependencies t)
+
+
+;;------------------------
+;; Yasnippet
+;;------------------------
+(add-to-list 'load-path
+              "~/emacs/yasnippet-master")
+(require 'yasnippet)
+(yas-global-mode 1)
+
+
+;;------------------------
+;; Polymode
+;;------------------------
+; without melpa
+;;(setq load-path
+;;      (append '("~/emacs/polymode-master" "~/emacs/poly-verilog-python")
+;;              load-path))
+;;
+;;(require 'poly-verilog-python)
+;;(add-to-list 'auto-mode-alist '("\\.sv.epy" . poly-verilog-python-mode))
+
+; with melpa
+(use-package polymode
+  :ensure t
+  :mode ("\.sv.epy$" . poly-verilog-python-mode)
+  :config
+  (define-hostmode poly-verilog-hostmode :mode 'verilog-mode)
+
+
+  (define-innermode poly-python-expr-verilog-innermode
+  :mode 'python-mode
+  :head-matcher "^[ \t]*- \\|#{"
+  :tail-matcher "$\\|}"
+  :head-mode 'host 
+  :tail-mode 'host   
+  )
+
+  (define-polymode poly-verilog-python-mode
+    :hostmode 'poly-verilog-hostmode
+    :innermodes '(poly-python-expr-verilog-innermode)))
+    
+
+
+  
+;;;;------------------------
+;;;; Jedi
+;;;;------------------------
+;;(add-to-list 'load-path
+;;              "~/emacs/popup")
+;;(add-to-list 'load-path
+;;              "~/emacs/auto-complete")
+;;
+;;;(add-to-list 'load-path
+;;;             "~/emacs/jedi")
+;;;(autoload 'jedi:setup "jedi" nil t)
+;;;(setq jedi:server-command '("~/emacs/jedi/jediepcserver.py"))
+;;;;;;;(require `jedi) ;;;;; TODO: temp removed as cause errors ;;;;;;;;;;;;;;
+;;;(add-hook 'python-mode-hook 'jedi:setup)
+;;;(setq jedi:complete-on-dot t)                 ; optional
+
+
+;;;;------------------------
+;;;; Elpy
+;;;;------------------------
+; python3
+;(setq python-shell-interpreter "/pkg/qct/software/python/3.6.0/bin/python3.6")
+;(setq python-shell-interpreter "~/venvironments/env1/Scripts/python.exe")
+(setq python-shell-interpreter "C:/Users/ynissani/venvironments/env1/Scripts/python.exe")
+
+(add-to-list 'load-path "~/emacs/s.el-master")
+(add-to-list 'load-path "~/emacs/pyvenv-master")
+(add-to-list 'load-path "~/emacs/Highlight-Indentation-for-Emacs-master")
+(add-to-list 'load-path "~/emacs/elpy-master")
+(load "elpy")
+(load "elpy-rpc")
+;(setq elpy-rpc-python-command "/pkg/qct/software/python/3.6.0/bin/python3.6")
+;(setq elpy-rpc-python-command "~/venvironments/env1/Scripts/python.exe")
+(setq elpy-rpc-python-command "C:/Users/ynissani/venvironments/env1/Scripts/python.exe")
+(load "elpy-shell")
+(load "elpy-profile")
+(load "elpy-refactor")
+(load "elpy-django")
