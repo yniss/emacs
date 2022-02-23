@@ -1,0 +1,19 @@
+# -*- mode: snippet -*-
+# name: case
+# key: case
+# type: command
+# --
+(let ((yas-good-grace nil)
+     (count (read-number "Number of case conditions: ")))
+     (yas-expand-snippet
+     (concat "always_comb begin\n"
+             "\tunique case (${1:expression})\n"
+             "\t"
+             (format "%d'd${2:0} : begin\n${3:signal} = ${4:value};\nend\n" (ceiling (log count 2)))
+             (mapconcat
+             (lambda (num)
+               (format "%d'd${%d:%d} : begin\n$3 = ${%d:value};\nend\n" (ceiling (log count 2)) (+ 5 (* num 2)) (1+ num) (+ 6 (* num 2))))
+               (number-sequence 0 (- count 2) nil)
+               "")
+               (format "\tdefault : begin\n$3 = ${%d:value};\nend\n" (+ 6 (* count 3)))
+               "\tendcase\nend")))

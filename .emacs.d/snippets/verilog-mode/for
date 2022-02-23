@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: for
+# key: for
+# --
+generate
+   genvar i;
+   for (i=$1; i<$2; i=i+1) begin : $3
+      $4 = $0;
+   end
+endgenerate

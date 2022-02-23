@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: structp
+# key: structp
+# --
+typedef struct packed {
+    $0;
+} ${1:name_t};
