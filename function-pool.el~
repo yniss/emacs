@@ -3,21 +3,21 @@
 ;;;;;;;;;;;;;;;;;
 ;;
 ;;   The package includes the following features:
-;;    Feature                                               |  Keybind
-;;    --------                                              |  -------
-;;   - Clear-Case commands                                  |
-;;       . co                                               |   C-c o
-;;       . ci                                               |   C-c i
-;;       . unco                                             |   C-c u
-;;   - Auto-Untabify                                        |
-;;   - TAG functions                                        |
-;;       . find file in TAGs                                |
-;;       . easy open/close instance in other window         |  C-c . or C-c ,
-;;   - Indentation functions                                |
-;;       . Align regexp to column of 1st row                |  C-x C-a
-;;   - Rectangle - incremental numbers                      |  C-x r N
-;;   - Copy line above                                      |  M-[up]
-;;   - Face at point                                        |
+;;    Feature                                                                         |  Keybind
+;;    --------                                                                        |  -------
+;;   - Clear-Case commands                                                            |
+;;       . co                                                                         |   C-c o
+;;       . ci                                                                         |   C-c i
+;;       . unco                                                                       |   C-c u
+;;   - Auto-Untabify                                                                  |
+;;   - TAG functions                                                                  |
+;;       . find file in TAGs                                                          |
+;;       . easy open/close instance in other window                                   |  C-c . or C-c ,
+;;   - Indentation functions                                                          |
+;;       . Align regexp to column of 1st row                                          |  C-x C-a
+;;   - Rectangle - incremental numbers                                                |  C-x r N
+;;   - Copy line above                                                                |  M-[up]
+;;   - Face at point                                                                  |
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

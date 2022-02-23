@@ -4,12 +4,11 @@
 ;;
 ;;   The package includes the following features:
 ;;    Feature                                               |  Keybind
-;;    -------                                               |  -------
-;;   - Templates Auto-insert                                |  by writing one of the template keywords (e.g. always, for, etc.)
-;;   - Transform module ports into instance ports           |  C-c p
-;;   - Copy module and                                      |  C-c m (copy module)
-;;     Auto instantiate copied module                       |  C-c n (instantiate copied module)
-;;   - Auto Comment line (by 3x'/') or header (by 4x'/')    |  /// (comment line) //// (comment header)
+;;    -------                                               |
+;;   - Templates Auto-insert
+;;   - Transform module ports into instance ports
+;;   - Copy module and Auto instantiate it
+;;   - Auto Comment line (by 3x'/') or header (by 4x'/')  
 
 (require 'verilog-mode)
 (require 'function-pool)
@@ -34,20 +33,14 @@
 ;; Templates ;;
 ;;;;;;;;;;;;;;;
 (defun verilog-ext-template-check () 
-  (let (cur-point bol-point)
-    (save-excursion
-      (setq cur-point (point))
-      (beginning-of-line)
-      (setq bol-point (point))
-      (goto-char cur-point)
-      (re-search-backward "^[ \t]*\\(\\w+\\)" bol-point t))
-    (when (and
-           (hash-table-p verilog-electric-words)
-           (setq electric-func (gethash (match-string 1) verilog-electric-words))
-           ; check if template word is inserted, but not in a comment
-           (not (inside-comment))
-           (not (null electric-func)))
-      (funcall electric-func))))
+  (save-excursion
+    (copy-region-as-kill (- (point) 1) (progn (backward-word) (point)))
+    (hash-table-p verilog-electric-words)
+    (setq electric-func (gethash (current-kill 0) verilog-electric-words)))
+  (setq kill-ring (cdr kill-ring))
+  ; check if template word is inserted, but not in a comment 
+  (if (and (not (inside-comment)) (not (null electric-func)))
+      (funcall electric-func)))
 
 
 (defun verilog-ext-template-query (query &optional optional)
@@ -63,17 +56,18 @@
       char))))
 
 
-(defun remove-template-word (word)
+(defun remove-template-word ()
   "Remove original template word"
-  (re-search-backward "\\(word\\)" nil t)
-  (replace-match "" 1))
+  (backward-char)
+  (kill-word -1) 
+  (setq kill-ring (cdr kill-ring)))
  
 (defun electric-always ()
   "Insert verilog 'always' template"
   (let (always-pos end-pos)
   (save-excursion
     (setq always-type (verilog-ext-template-query "(c)omb or (s)eq?" t))
-    (remove-template-word "always")
+    (remove-template-word)
     ; always template
     (verilog-sk-always)
     ; indent
@@ -98,8 +92,8 @@
   (insert " or negedge ")
   (setq reset (prompt-user-arg "reset name" t))
   (forward-line 1)
-  (insert (concat "\tif (~" reset ") begin" "\n\n\tend\n\telse begin\n\n\tend"))
-  (forward-line -4)
+  (insert (concat "\tif (~" reset ")" "\n\n\telse\n"))
+  (forward-line -2)
   (insert "\t\t")
   (setq pos (point))
   pos)
@@ -115,25 +109,25 @@
 (defun electric-case ()
   "Insert verilog 'case' template"
   (save-excursion
-    (remove-template-word "case")
+    (remove-template-word)
     (verilog-sk-case)))
 
 (defun electric-for ()
   "Insert verilog 'for' template"
   (save-excursion
-    (remove-template-word "for")
+    (remove-template-word)
     (verilog-sk-for)))
 
 (defun electric-generate ()
   "Insert verilog 'generate' template"
   (save-excursion
-    (remove-template-word "generate")
+    (remove-template-word)
     (verilog-sk-generate)))
 
 (defun electric-module () ;;TODO: add support for prompt parameters, ports, etc.
   "Insert verilog 'module' template"
   (save-excursion
-    (remove-template-word "module")
+    (remove-template-word)
     (verilog-sk-module)
     ; remove "/*AUTOARG*/"
     (forward-line -1)
@@ -145,20 +139,20 @@
 (defun electric-casex ()
   "Insert verilog 'casex' template"
   (save-excursion
-    (remove-template-word "casex")
+    (remove-template-word)
     (verilog-sk-casex)))
 
 (defun electric-casez ()
   "Insert verilog 'casez' template"
   (save-excursion
-    (remove-template-word "casez")
+    (remove-template-word)
     (verilog-sk-casez)))
 
-(defvar verilog-electric-words (make-hash-table :test 'equal) ;;TODO: this causes issues in copy paste
+(defvar verilog-electric-words (make-hash-table :test 'equal)
   "Words for auto-generating verilog structures")
 (setf (gethash "always"   verilog-electric-words) 'electric-always)
 (setf (gethash "case"     verilog-electric-words) 'electric-case)
-;(setf (gethash "for"      verilog-electric-words) 'electric-for) 
+(setf (gethash "for"      verilog-electric-words) 'electric-for) 
 (setf (gethash "generate" verilog-electric-words) 'electric-generate)
 (setf (gethash "module"   verilog-electric-words) 'electric-module)
 (setf (gethash "casex"    verilog-electric-words) 'electric-casex)
@@ -169,7 +163,7 @@
 ;;  Instance Ports  ;;
 ;;;;;;;;;;;;;;;;;;;;;;
 (defun verilog-ext-indent-instance-ports ()
-  "Transforms selected region to format of verilog instantiation ports, e.g. '.port_name (),'.
+  "Transforms selected region to format of verilog instantiation ports, e.g. '.<port_name> (),'.
    Function also indent region according to the port prior to the region, if there is such.
    If port line doesn't contains only '.' or '(),' then function fills only the missing part.
    In addition, function removes common keywords that may have been copied from module ports, such as input, output and bus widths."
@@ -189,7 +183,7 @@
       (if (re-search-backward "^[ \t]*\\.+\\w+[ \t]*\\(.*\\)," point-instance-start t) ;; search for previous port format line, but not before instance beginning
           (progn
             (align-regexp-first-line (point) (region-end) "\\.")
-            (align-regexp-first-line (point) (region-end) "("))
+            (align-regexp-first-line (point) (region-end) "()"))
         (progn
           (electric-verilog-tab)
           (align-regexp-simple prev-point (region-end) "(")))
@@ -345,15 +339,6 @@
   (forward-line -1)
   (forward-char 3)
   (init-comment-count))
-
-(defun verilog-ext-comment-region-inline ()
-  "Comment out a region inside a line using /**/ comment format"
-  (interactive)
- ;(let
-  (save-excursion
-    (insert "*/")
-    (goto-char (region-beginning))
-    (insert "/*")))
  
   
 ;;;;;;;;;;;;;;;
@@ -375,8 +360,6 @@
 ;           (define-key map [remap tab-to-tab-stop] 'verilog-ext-indent-instance-ports)
             (define-key map (kbd "\C-c m") 'verilog-ext-copy-module)
             (define-key map (kbd "\C-c n") 'verilog-ext-make-instance)
-            (define-key map (kbd "\C-c \C-v") 'verilog-ext-comment-region-inline)
-            (define-key map [remap save-buffer] 'save-buffer-without-tabs)
             map)
   (if verilog-ext-minor-mode
       (progn

@@ -1,25 +1,30 @@
 ;;-------
 ;; MELPA
 ;;-------
+;; Doesn't work if no access to web!
 (require 'package)
-;; TODO: doesn't work, web required!
-(let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
-                    (not (gnutls-available-p))))
-       (proto (if no-ssl "http" "https")))
-  ;; Comment/uncomment these two lines to enable/disable MELPA and MELPA Stable as desired
-  (add-to-list 'package-archives (cons "melpa" (concat proto "://melpa.org/packages/")) t)
-  ;;(add-to-list 'package-archives (cons "melpa-stable" (concat proto "://stable.melpa.org/packages/")) t)
-  (when (< emacs-major-version 24)
-    ;; For important compatibility libraries like cl-lib
-    (add-to-list 'package-archives '("gnu" . (concat proto "://elpa.gnu.org/packages/")))))
+;(let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
+;                    (not (gnutls-available-p))))
+;       (proto (if no-ssl "http" "https")))
+;  ;; Comment/uncomment these two lines to enable/disable MELPA and MELPA Stable as desired
+;  (add-to-list 'package-archives (cons "melpa" (concat proto "://melpa.org/packages/")) t)
+;  ;;(add-to-list 'package-archives (cons "melpa-stable" (concat proto "://stable.melpa.org/packages/")) t)
+;  (when (< emacs-major-version 24)
+;    ;; For important compatibility libraries like cl-lib
+;    (add-to-list 'package-archives '("gnu" . (concat proto "://elpa.gnu.org/packages/")))))
+
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+;; Comment/uncomment this line to enable MELPA Stable if desired.  See `package-archive-priorities`
+;; and `package-pinned-packages`. Most users will not need or want to do this.
+;;(add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
 (package-initialize)
+
 
 ;; disable splash screen and startup message
 (setq inhibit-startup-message t) 
 (setq initial-scratch-message nil)
 
 (add-to-list 'load-path "~/emacs/")
-
 
 ;;;;;;; FROM XEMACS init.el ; TODO: go over and check
 (defun prepend-path ( my-path )
@@ -175,6 +180,7 @@
 (add-hook 'verilog-mode-hook 'my-fic-mode-hook)
 (add-hook 'elisp-mode-hook 'my-fic-mode-hook)
 (add-hook 'python-mode-hook 'my-fic-mode-hook)
+(add-hook 'c-mode-hook 'my-fic-mode-hook)
 (defun my-fic-mode-hook ()
   (fic-mode 1))
 
@@ -183,17 +189,17 @@
 (add-hook 'verilog-mode-hook (lambda ()
                            "Turn on `verilog-ext-minor-mode' mode."
                            (verilog-ext-minor-mode 1)))
- 
+ (setq verilog-ext-auto-templates nil) ; disable electric verilog
 
 ; company-mode - autocomplete
 (add-to-list 'load-path "~/emacs/company-mode/")
 ;(load "company")
 ;(add-hook 'after-init-hook 'global-company-mode)
 
-; neotree
-(add-to-list 'load-path "~/emacs/emacs-neotree/")
-(require 'neotree)
-(global-set-key "\C-c\C-f" 'neotree-toggle)
+;; neotree
+;(add-to-list 'load-path "~/emacs/emacs-neotree/")
+;(require 'neotree)
+;(global-set-key "\C-c\C-f" 'neotree-toggle)
 
 ; smartparens
 (add-to-list 'load-path "~/emacs/dash/")
@@ -231,14 +237,22 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(default ((t (:family "DejaVu Sans Mono" :foundry "unknown" :slant normal :weight normal :height 98 :width normal)))))
+;(if (eq system-type 'windows-nt)
+;;(add-to-list 'default-frame-alist
+;;             '(font . "Monospace821 BT"))
 (set-cursor-color "#ffff00")
 ;(set-face-attribute 'region nil :background "#483d8b")
 (setq column-number-mode t)
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
 
+(setq large-file-warning-threshold nil)
+
+;; revert buffer without query
+(setq revert-without-query '(".*"))
+
 ;; linum-mode
-;(global-linum-mode 1)
+(global-linum-mode 1)
 
 ;;------------------------
 ;; Org-mode
@@ -279,32 +293,32 @@
 ;; Polymode
 ;;------------------------
 ; without melpa
-;;(setq load-path
-;;      (append '("~/emacs/polymode-master" "~/emacs/poly-verilog-python")
-;;              load-path))
-;;
+(setq load-path
+      (append '("~/emacs/polymode-master" "~/emacs/poly-verilog-python")
+              load-path))
+
+(add-to-list 'auto-mode-alist '("\\.sv.epy$" . poly-verilog-python-mode))
 ;;(require 'poly-verilog-python)
-;;(add-to-list 'auto-mode-alist '("\\.sv.epy" . poly-verilog-python-mode))
 
 ; with melpa
-(use-package polymode
-  :ensure t
-  :mode ("\.sv.epy$" . poly-verilog-python-mode)
-  :config
-  (define-hostmode poly-verilog-hostmode :mode 'verilog-mode)
-
-
-  (define-innermode poly-python-expr-verilog-innermode
-  :mode 'python-mode
-  :head-matcher "^[ \t]*- \\|#{"
-  :tail-matcher "$\\|}"
-  :head-mode 'host 
-  :tail-mode 'host   
-  )
-
-  (define-polymode poly-verilog-python-mode
-    :hostmode 'poly-verilog-hostmode
-    :innermodes '(poly-python-expr-verilog-innermode)))
+;;(use-package polymode
+;;  :ensure t
+;;  :mode ("\.sv.epy$" . poly-verilog-python-mode)
+;;  :config
+;;  (define-hostmode poly-verilog-hostmode :mode 'verilog-mode)
+;;
+;;
+;;  (define-innermode poly-python-expr-verilog-innermode
+;;  :mode 'python-mode
+;;  :head-matcher "^[ \t]*- \\|#{"
+;;  :tail-matcher "$\\|}"
+;;  :head-mode 'host 
+;;  :tail-mode 'host   
+;;  )
+;;
+;;  (define-polymode poly-verilog-python-mode
+;;    :hostmode 'poly-verilog-hostmode
+;;    :innermodes '(poly-python-expr-verilog-innermode)))
     
 
 
@@ -338,12 +352,32 @@
 (add-to-list 'load-path "~/emacs/pyvenv-master")
 (add-to-list 'load-path "~/emacs/Highlight-Indentation-for-Emacs-master")
 (add-to-list 'load-path "~/emacs/elpy-master")
-(load "elpy")
-(load "elpy-rpc")
-;(setq elpy-rpc-python-command "/pkg/qct/software/python/3.6.0/bin/python3.6")
-;(setq elpy-rpc-python-command "~/venvironments/env1/Scripts/python.exe")
-(setq elpy-rpc-python-command "C:/Users/ynissani/venvironments/env1/Scripts/python.exe")
-(load "elpy-shell")
-(load "elpy-profile")
-(load "elpy-refactor")
-(load "elpy-django")
+;(load "elpy")
+;(load "elpy-rpc")
+;;(setq elpy-rpc-python-command "~/venvironments/env1/Scripts/python.exe")
+;(load "elpy-shell")
+;(load "elpy-profile")
+;(load "elpy-refactor")
+;(load "elpy-django")
+
+; enable elpy & activate venv for python mode only
+(add-to-list 'auto-mode-alist '("\\.py\\'" . elpy-mode))
+(defun my-python-mode-setup ()
+  (require 'pyvenv)
+  (pyvenv-activate "C:/Users/ynissani/venvironments/env1")
+  (load "elpy")
+  (load "elpy-rpc")
+  (setq elpy-rpc-python-command "C:/Users/ynissani/venvironments/env1/Scripts/python.exe")
+  (load "elpy-shell")
+  (load "elpy-profile")
+  (load "elpy-refactor")
+  (load "elpy-djangp")
+  (elpy-enable))
+(add-hook 'python-mode-hook 'my-python-mode-setup)
+
+
+;;;;------------------------
+;;;; ESUP
+;;;;------------------------
+(add-to-list 'load-path "~/emacs/esup")
+(autoload 'esup "esup" "Emacs Start Up Profiler." t)
