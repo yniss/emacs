@@ -1,0 +1,15 @@
+source ~/.alias
+xset -b b 0
+set prompt="%{\033[33m%}%B %/> }" # PATH
+
+### CLEAR CASE VIEW
+if ( $?prompt ) then
+   if ( $?CLEARCASE_ROOT ) then
+      set prompt = "[`basename $CLEARCASE_ROOT`]$prompt"
+   endif
+endif
+
+set path = (/pkg/qct/software/emacs/25.2/bin/ $path)
+
+bindkey "^[[1;5C" forward-word
+bindkey "^[[1;5D" backward-word

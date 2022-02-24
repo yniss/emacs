@@ -1,0 +1,29 @@
+#+STARTUP: overview
+#+STARTUP: hidestars
+#+TODO: TODO(t) STARTED(s) WAITING(w) | DONE(d) CANCELED(c) WONT_DO(o)
+#+TAGS: Verification(v) FutureFeature(f) LowPriority(l) Documentation(d)
+----------------
+--   Tasks:   --
+----------------
+
+* _Do Today_:
+
+** TODO Something1
+   SCHEDULED: <2022-02-21 Mon>
+
+** TODO *Something bold*
+   SCHEDULED: <2022-02-22 Tue>
+
+* _Project1:_
+
+** TODO Project task1
+
+* _Project2:_
+
+* _Scripts:_
+
+* _Manager:_
+
+* _Knowledge tasks:_
+
+* _Personal:_

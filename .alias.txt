@@ -1,0 +1,46 @@
+#!/bin/csh -f
+#-----------------------------
+set     red="\033[1;31m"
+set   green="\033[1;32m"
+set  yellow="\033[1;33m"
+set    blue="\033[1;34m"
+set magenta="\033[1;35m"
+set    cyan="\033[1;36m"
+set   white="\033[1;37m"
+set     end="\033[0m" # This is needed at the end... :(
+#-----------------------------
+
+##############################
+##     LINUX GENERAL        ##
+##############################
+alias h history
+alias s source
+alias la 'ls -la'
+alias ls 'ls -F'
+alias ll 'ls -ltr'
+alias dir 'ls -l \!* | grep ^d'
+alias cls 'clear'
+alias psa 'ps -ef | more'
+alias j jobs
+alias k kill
+alias bin2hex '(echo obase=16; echo `(echo ibase=2 ; echo \!*) | bc `) | bc'
+alias hex2bin '(echo obase=2; echo `(echo ibase=16 ; echo \!*) | bc `) | bc'
+alias hex2dec '(echo obase=10; echo `(echo ibase=16 ; echo \!*) | bc `) | bc'
+alias dec2hex '(echo obase=16; echo `(echo ibase=10 ; echo \!*) | bc `) | bc'
+alias base '(echo obase=\!:2 ; echo `(echo ibase=\!:1 ; echo \!:3) | bc `) | bc'
+
+alias fullpath 'readlink -f \!:1'
+alias .. 'cd ../'
+alias ... 'cd ../../'
+alias emacs '/pkg/qct/software/emacs/26.2/bin/emacs -geometry 230x60+10-50 \\!* &' # TODO: point to emacs package
+alias e '/pkg/qct/software/emacs/26.2/bin/emacs -geometry 230x60+10-50 \\!* &' # TODO: point to emacs package
+
+##############################
+##        GENERAL           ##
+##############################
+
+
+##############################
+##        SCRIPTS           ##
+##############################
+
